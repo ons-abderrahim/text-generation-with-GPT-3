@@ -1,0 +1,69 @@
+## ============================================================
+## LLaMA-2-7B Fine-Tuning Config with LoRA + 4-bit Quantization
+## Recommended: GPU with ≥ 24GB VRAM (or 2× 16GB)
+## Requires: HuggingFace access token for meta-llama models
+## ============================================================
+
+model:
+  name: meta-llama/Llama-2-7b-hf
+  tokenizer: meta-llama/Llama-2-7b-hf
+
+dataset:
+  name: cnn_dailymail
+  dataset_config: "3.0.0"          # CNN/DailyMail version
+  text_column: article
+  max_length: 1024
+  train_split: train
+  eval_split: validation
+  num_proc: 4
+
+training:
+  output_dir: outputs/checkpoints/llama2-cnn-lora
+  num_train_epochs: 1
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 16   # Effective batch = 2 × 16 = 32
+  learning_rate: 3.0e-4             # Higher LR typical for LoRA
+  warmup_steps: 100
+  weight_decay: 0.001
+  lr_scheduler_type: cosine
+  fp16: false
+  bf16: true                        # bfloat16 more stable for large models
+  evaluation_strategy: steps
+  eval_steps: 500
+  save_strategy: steps
+  save_steps: 500
+  save_total_limit: 2
+  load_best_model_at_end: true
+  logging_steps: 25
+  dataloader_num_workers: 2
+  gradient_checkpointing: true
+  optim: paged_adamw_32bit          # Memory-efficient optimizer for QLoRA
+  seed: 42
+  report_to: wandb                  # Recommended for long runs
+
+# LoRA configuration (applied automatically when --use_lora flag is set)
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules:
+    - q_proj
+    - v_proj
+
+# 4-bit quantization (activated via --load_in_4bit flag)
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: bfloat16
+
+generation:
+  sample_prompts:
+    - "The president announced today that"
+    - "A recent study published in Nature found"
+    - "Wall Street reacted with"
+  max_new_tokens: 300
+  temperature: 0.7
+  top_p: 0.90
+  repetition_penalty: 1.15

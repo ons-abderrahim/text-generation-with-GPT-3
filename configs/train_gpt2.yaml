@@ -1,0 +1,50 @@
+## ============================================================
+## GPT-2 Fine-Tuning Config — AG News (News Articles)
+## ============================================================
+
+model:
+  name: gpt2                     # gpt2 | gpt2-medium | gpt2-large | gpt2-xl
+  tokenizer: gpt2
+
+dataset:
+  name: ag_news                  # HuggingFace dataset ID
+  text_column: text
+  max_length: 512
+  train_split: train
+  eval_split: test
+  num_proc: 4                    # Parallel tokenization workers
+
+training:
+  output_dir: outputs/checkpoints/gpt2-ag-news
+  num_train_epochs: 3
+  per_device_train_batch_size: 8
+  per_device_eval_batch_size: 8
+  gradient_accumulation_steps: 4 # Effective batch size = 8 × 4 = 32
+  learning_rate: 5.0e-5
+  warmup_steps: 500
+  weight_decay: 0.01
+  lr_scheduler_type: cosine      # cosine | linear | constant
+  fp16: true                     # Mixed precision (requires GPU)
+  evaluation_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 3
+  load_best_model_at_end: true
+  logging_steps: 100
+  dataloader_num_workers: 2
+  gradient_checkpointing: false  # Set true to save VRAM at cost of speed
+  optim: adamw_torch
+  seed: 42
+  report_to: tensorboard         # tensorboard | wandb | none
+  push_to_hub: false
+  # hub_model_id: your-username/gpt2-ag-news  # Uncomment to push to HF Hub
+
+generation:
+  # Used for qualitative monitoring during training
+  sample_prompts:
+    - "Breaking news:"
+    - "Scientists have discovered"
+    - "The stock market"
+  max_new_tokens: 150
+  temperature: 0.8
+  top_p: 0.92
+  repetition_penalty: 1.2

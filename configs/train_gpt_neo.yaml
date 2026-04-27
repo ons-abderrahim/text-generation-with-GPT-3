@@ -1,0 +1,48 @@
+## ============================================================
+## GPT-Neo 1.3B Fine-Tuning Config — TinyStories
+## Recommended: GPU with ≥ 16GB VRAM
+## ============================================================
+
+model:
+  name: EleutherAI/gpt-neo-1.3B
+  tokenizer: EleutherAI/gpt-neo-1.3B
+
+dataset:
+  name: roneneldan/TinyStories
+  text_column: text
+  max_length: 512
+  train_split: train
+  eval_split: validation
+  num_proc: 4
+
+training:
+  output_dir: outputs/checkpoints/gpt-neo-tinystories
+  num_train_epochs: 2
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 8   # Effective batch = 4 × 8 = 32
+  learning_rate: 2.0e-5
+  warmup_steps: 300
+  weight_decay: 0.01
+  lr_scheduler_type: cosine
+  fp16: true
+  evaluation_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 2
+  load_best_model_at_end: true
+  logging_steps: 50
+  dataloader_num_workers: 2
+  gradient_checkpointing: true     # Enables large models on limited VRAM
+  optim: adamw_torch
+  seed: 42
+  report_to: tensorboard
+
+generation:
+  sample_prompts:
+    - "Once upon a time, there was a little girl"
+    - "The friendly dragon lived in a"
+    - "Every morning, the old man would"
+  max_new_tokens: 200
+  temperature: 0.9
+  top_p: 0.95
+  repetition_penalty: 1.3
